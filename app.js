@@ -3,12 +3,18 @@ var express = require('express');
 var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
-// let chalk = require('chalk');
+const chalk = require('chalk');
+require('dotenv').config();
+const mongodb = require('mongodb');
+const cors = require('cors');
 
 var indexRouter = require('./routes/index');
 var usersRouter = require('./routes/users');
+var questionsRouter = require('./routes/questions');
+var answersRouter = require('./routes/answers');
 
 var app = express();
+app.use(cors());
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -22,14 +28,16 @@ app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
 app.use('/users', usersRouter);
+app.use('/questions', questionsRouter);
+app.use('/answers', answersRouter);
 
 // catch 404 and forward to error handler
-app.use(function(req, res, next) {
+app.use((req, res, next) => {
   next(createError(404));
 });
 
 // error handler
-app.use(function(err, req, res, next) {
+app.use((err, req, res) => {
   // set locals, only providing error in development
   res.locals.message = err.message;
   res.locals.error = req.app.get('env') === 'development' ? err : {};
@@ -38,5 +46,22 @@ app.use(function(err, req, res, next) {
   res.status(err.status || 500);
   res.render('error');
 });
+
+let MongoClient = mongodb.MongoClient;
+console.log(chalk.rgb(255, 255, 255).bgMagenta.underline(`Conectando a  -> ${process.env.MONGODB_LOCATION}`));
+MongoClient.connect(
+  process.env.MONGODB_URI,
+  {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+  },
+  (err, client) => {
+    if (err !== null) {
+      console.log(err);
+    } else {
+      app.locals.db = client.db("accexible");
+      console.log(chalk.black.bgGreenBright.underline(`Conectado!`));
+    }
+  });
 
 module.exports = app;
