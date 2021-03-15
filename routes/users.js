@@ -17,17 +17,17 @@ router.post("/login", function (req, res) {//ponemos nueva URL que recibe usuari
     .toArray(function (err, arrayUser) {//lo que era un objeto lo convierte en parte de un array
       // console.log(arrayUsuario);
       if (err !== null) {
-        res.send({ mensaje: "Ha habido un error", status: false });
+        res.json({ mensaje: "Ha habido un error", status: false });
       } else {
         if (arrayUser.length > 0) {//si encuentra un usuario en el find comparará que la contraseña que hemos metido será la misma que la del parámetro
           if (password === arrayUser[0].password) {
             // if (bcrypt.compareSync(password, arrayUser[0].password)) {//si puede hacerla se logueará correctamente y si no, incorrecta.
-            res.send({ mensaje: "Logueado correctamente", status: true });
+            res.json({ status: 0 });
           } else {
-            res.send({ mensaje: "Contraseña incorrecta", status: false });
+            res.json({ status: 1 });
           }
         } else {
-          res.send({ mensaje: "El usuario no existe", status: false });
+          res.json({ status: 2 });
         }
       }
     });
