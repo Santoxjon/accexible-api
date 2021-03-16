@@ -2,6 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var bcrypt = require('bcrypt');
+const { ObjectId } = require('bson');
 router.use(express.json());
 router.use(express.urlencoded({ extended: false }));
 
@@ -63,6 +64,24 @@ router.post('/register', (req, res) => {
       }
     }
   })
+});
 
+router.get("/checkToken", function (req, res) {
+  let loginToken = req.query.token;
+  let _id = new ObjectId(req.query.id);
+
+  dbConnection = req.app.locals.db;
+  dbConnection.collection('users').findOne({ _id, loginToken }, function (err, user) {
+    if (err != null) {
+      res.send("Ha habido un error: " + err);
+    } else {
+      if(user) {
+        res.json(true)
+      }
+      else {
+        res.json(false)
+      }
+    }
+  })
 });
 module.exports = router;
