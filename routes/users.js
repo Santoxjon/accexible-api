@@ -105,9 +105,11 @@ router.put('/updateuser', (req, res) => {
   let idEdit = new ObjectId(req.body.id)
   let nameEdit = req.body.name
   let emailEdit = req.body.email
+  let passwordEdit = req.body.password
+  let cryptPassword = bcrypt.hashSync(passwordEdit, 10);
   console.log(idEdit, nameEdit, emailEdit)
   dbConnection = req.app.locals.db;
-  dbConnection.collection('users').updateOne({_id: idEdit}, {$set: {"name": nameEdit, "email": emailEdit}}, function (err, user) {
+  dbConnection.collection('users').updateOne({_id: idEdit}, {$set: {"name": nameEdit, "email": emailEdit, "password": cryptPassword}}, function (err, user) {
     if (err != null) {
       res.send("Ha habido un error: " + err);
     } else {
