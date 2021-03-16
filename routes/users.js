@@ -66,7 +66,7 @@ router.post('/register', (req, res) => {
   })
 });
 
-router.get("/checkToken", function (req, res) {
+router.get('/checkToken', (req, res) => {
   let loginToken = req.query.token;
   let _id = new ObjectId(req.query.id);
 
@@ -75,29 +75,28 @@ router.get("/checkToken", function (req, res) {
     if (err != null) {
       res.send("Ha habido un error: " + err);
     } else {
-      if(user) {
-        res.json(true)
+      if (user) {
+        res.json(user)
       }
       else {
-        res.json(false)
-      }
-    }
-  })
-});
-
-router.get('/checkloggeduser', (req, res) => {
-  let userLoginToken = req.query.loginToken
-  let userObjectId = new ObjectId(req.query.userId)
-  console.log(userLoginToken, userObjectId)
-  dbConnection = req.app.locals.db;
-  dbConnection.collection('users').findOne({ "loginToken": userLoginToken, "_id": userObjectId}, function (err, user) {
-    if (err != null) {
-      res.send("Ha habido un error: " + err);
-    } else {
-      if (user) {
-        res.json(user) 
+        res.json(user)
       }
     }
   })
 })
+
+router.put('/updateToken', (req, res) => {
+  let _id = new ObjectId(req.body._id)
+  let email = req.body.email;
+  let loginToken = bcrypt.hashSync(new Date().getTime() + email, 10);
+
+  dbConnection = req.app.locals.db;
+  dbConnection.collection('users').updateOne({ _id }, { $set: { loginToken } }, function (err) {
+    if (err != null) {
+      res.send("Ha habido un error: " + err);
+    } else {
+      res.json({ loginToken, _id });
+    }
+  })
+});
 module.exports = router;
