@@ -84,4 +84,20 @@ router.get("/checkToken", function (req, res) {
     }
   })
 });
+
+router.get('/checkloggeduser', (req, res) => {
+  let userLoginToken = req.query.loginToken
+  let userObjectId = new ObjectId(req.query.userId)
+  console.log(userLoginToken, userObjectId)
+  dbConnection = req.app.locals.db;
+  dbConnection.collection('users').findOne({ "loginToken": userLoginToken, "_id": userObjectId}, function (err, user) {
+    if (err != null) {
+      res.send("Ha habido un error: " + err);
+    } else {
+      if (user) {
+        res.json(user) 
+      }
+    }
+  })
+})
 module.exports = router;
