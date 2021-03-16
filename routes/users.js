@@ -100,22 +100,34 @@ router.put('/updateToken', (req, res) => {
   })
 });
 
-router.put('/updateuser', (req, res) => {
-  let idEdit = new ObjectId(req.body.id)
-  let nameEdit = req.body.name
-  let emailEdit = req.body.email
-  let passwordEdit = req.body.password
-  let cryptPassword = bcrypt.hashSync(passwordEdit, 10);
-  console.log(idEdit, nameEdit, emailEdit)
+router.put('/updateUser', (req, res) => {
+  let _id = new ObjectId(req.body.id);
+  let name = req.body.name;
+  let email = req.body.email;
+
   dbConnection = req.app.locals.db;
-  dbConnection.collection('users').updateOne({_id: idEdit}, {$set: {"name": nameEdit, "email": emailEdit, "password": cryptPassword}}, function (err, user) {
+  dbConnection.collection('users').updateOne({ _id }, { $set: { name, email } }, function (err, user) {
     if (err != null) {
       res.send("Ha habido un error: " + err);
     } else {
       if (user) {
-        res.json(user) 
+        res.json(user);
       }
-  }})
+    }
+  })
+});
+
+router.get('/checkEmail', (req, res) => {
+  let email = req.query.email;
+
+  dbConnection = req.app.locals.db;
+  dbConnection.collection('users').findOne({ email }, function (err, user) {
+    if (err != null) {
+      res.send("Ha habido un error: " + err);
+    } else {
+      res.json(user);
+    }
+  });
 });
 
 module.exports = router;
