@@ -131,3 +131,20 @@ router.get('/checkEmail', (req, res) => {
 });
 
 module.exports = router;
+
+router.put('/changePassword', (req, res) => {
+  console.log(req.body)
+  let _id = new ObjectId(req.body.id);
+  let passwordNuevo = req.body.password;
+  let passwordCifrado = bcrypt.hashSync(passwordNuevo, 10)
+  dbConnection = req.app.locals.db;
+  dbConnection.collection('users').updateOne({ _id }, { $set: {password: passwordCifrado} }, function (err, user) {
+    if (err !== null) {
+      res.send("Ha habido un error " + err);
+    } else {
+      if (user) {
+        res.json(user);
+      }
+    }
+  })
+});
