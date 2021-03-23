@@ -2,7 +2,7 @@ var express = require('express');
 var router = express.Router();
 
 var bcrypt = require('bcrypt');
-const { ObjectId } = require('bson');
+const { ObjectId } = require('mongodb');
 router.use(express.json());
 router.use(express.urlencoded({ extended: false }));
 
