@@ -10,7 +10,7 @@ const mcTestScore = {
 }
 
 /** 
- *  PUT - De cada nuevo resultado del test cerrado en BBDD
+ *  POST - De cada nuevo resultado del test cerrado en BBDD
 */
 router.post('/newresult', (req, res) => {
 
@@ -44,5 +44,32 @@ router.post('/newresult', (req, res) => {
         }
     })
 });
+
+
+/* GET ALL THE RESULTS FROM THE USER */
+router.get('/resultsuser/:id', (req, res) => {
+    let id = new ObjectId(req.params.id);
+    console.log(id);
+
+
+    dbConnection = req.app.locals.db;
+    dbConnection.collection('results').find({ "userId": id }).sort({ "date": -1 }).toArray(function (err, userTestFound) {
+        if (err != null) {
+            res.send("Ha habido un error: " + err);
+        } else {
+            if (userTestFound.length === 0) {
+                res.send({ message: "NO EXISTEN RESULTADOS A MOSTRAR" });
+                console.log("NADA QUE MOSTRAR EN RESULTADOS PARA EL USUARIO");
+            } else {
+                console.log(userTestFound);
+                res.send(userTestFound);
+            }
+        }
+    });
+});
+
+
+
+
 
 module.exports = router;
