@@ -13,6 +13,7 @@ var usersRouter = require('./routes/users');
 var questionsRouter = require('./routes/questions');
 var answersRouter = require('./routes/answers');
 var testRouter = require('./routes/test');
+var chatbotRouter = require('./routes/chatbot');
 
 var app = express();
 app.use(cors());
@@ -32,6 +33,7 @@ app.use('/users', usersRouter);
 app.use('/questions', questionsRouter);
 app.use('/answers', answersRouter);
 app.use('/test', testRouter);
+app.use('/chatbot', chatbotRouter);
 
 // catch 404 and forward to error handler
 app.use((req, res, next) => {
