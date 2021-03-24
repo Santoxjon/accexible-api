@@ -25,25 +25,13 @@ router.post('/checkMessage', (req, res) => {
             res.send({ mensaje: "error: " + err });
         } else {
             data.forEach(keyword => {
-                // if (message.includes(keyword.word)) {
-                    var regex = '\\b';
-                    regex += keyword.word;
-                    regex += '\\b';
-                if (new RegExp(regex, "i").test(message)) {
+                if (new RegExp(`\\b${keyword.word}\\b`, "i").test(message)) {
                     score += keyword.value;
                 }
             });
             res.json(score);
         }
     });
-    // req.app.locals.db.collection("keywords").find().sort({ "value": -1 }).toArray(function (err, data) {
-    //     if (err != null) {
-    //         console.log(err);
-    //         res.send({ mensaje: "error: " + err });
-    //     } else {
-    //         res.json(data)
-    //     }
-    // });
 });
 
 module.exports = router;
