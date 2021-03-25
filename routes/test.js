@@ -32,6 +32,8 @@ router.post('/newresult', (req, res) => {
         newResult.scoreTest += mcTestScore[answer];
     });
 
+    newResult.finished = false;
+
     dbConnection = req.app.locals.db;
     dbConnection.collection('results').insertOne(newResult, function (err) {
         if (err != null) {

@@ -1,4 +1,6 @@
+const { ObjectId } = require('mongodb');
 var express = require('express');
+const chalk = require('chalk');
 var router = express.Router();
 
 /** 
@@ -17,19 +19,37 @@ router.get('/', (req, res) => {
 });
 
 router.post('/checkMessage', (req, res) => {
-    let score = 0;
     let message = req.body.message.toLowerCase();
-    req.app.locals.db.collection("keywords").find().sort({ "value": -1 }).toArray(function (err, data) {
+    let userId = new ObjectId(req.body.userId);
+
+    req.app.locals.db.collection("results").findOne({ userId, finished: false }, (err, result) => {
         if (err != null) {
             console.log(err);
             res.send({ mensaje: "error: " + err });
         } else {
-            data.forEach(keyword => {
-                if (new RegExp(`\\b${keyword.word}\\b`, "i").test(message)) {
-                    score += keyword.value;
+            
+            let score = result.scoreChat;
+            req.app.locals.db.collection("keywords").find().sort({ "value": -1 }).toArray(function (err, data) {
+                if (err != null) {
+                    console.log(err);
+                    res.send({ mensaje: "error: " + err });
+                } else {
+
+                    data.forEach(keyword => {
+                        if (new RegExp(`\\b${keyword.word}\\b`, "i").test(message)) {
+                            score += keyword.value;
+                        }
+                    });
+                    req.app.locals.db.collection("results").updateOne({ userId, finished: false }, { $set: { scoreChat: score } }, (err) => {
+                        if (err != null) {
+                            console.log(err);
+                            res.send({ mensaje: "error: " + err });
+                        } else {
+                            res.json(score);
+                        }
+                    });
                 }
             });
-            res.json(score);
         }
     });
 });
