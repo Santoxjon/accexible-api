@@ -23,7 +23,7 @@ router.post('/newresult', (req, res) => {
     let newResult = {
         userId: new ObjectId(req.body.userId),
         scoreTest: 0,
-        scoreChat: -1,
+        scoreChat: 0,
         date: new Date(),
         answers: arrayAnswers
     };
@@ -33,6 +33,7 @@ router.post('/newresult', (req, res) => {
     });
 
     newResult.finished = false;
+    newResult.mentioned = [];
 
     dbConnection = req.app.locals.db;
     dbConnection.collection('results').insertOne(newResult, function (err) {
