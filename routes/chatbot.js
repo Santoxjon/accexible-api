@@ -96,22 +96,20 @@ router.post('/checkMessage', (req, res) => {
             console.log(err);
             res.send({ mensaje: "error: " + err });
         } else {
-
-            let scoreTest = result.scoreTest;
+            // let scoreTest = result.scoreTest;
             let scoreChat = result.scoreChat;
             let mentionedGroups = result.mentioned;
             let fppCounter = +result.fppCounter;
             let oppCounter = +result.oppCounter;
             let wordCounter = +result.wordCounter
             let questionsAsked = result.questionsAsked;
+            let rumination = +result.rumination;
 
             if (wordCounter >= 200) {
-                res.json("Recivido! Dame un momento y te llevaré a los resultados...");
+                res.json("Recivido! Dame un momento y te llevaré a los resultados de la prueba...");
             }
             else {
                 wordCounter += message.split(" ").length;
-
-
                 FPP.forEach(fpp => {
                     let matches = message.match(new RegExp(`\\b${fpp}\\b`, "ig"));
                     fppCounter += matches ? matches.length : 0;
@@ -127,24 +125,58 @@ router.post('/checkMessage', (req, res) => {
                         console.log(err);
                         res.send({ mensaje: "error: " + err });
                     } else {
-
+                        
                         // Update score using keywords value
                         data.forEach(keyword => {
                             if (new RegExp(`\\b${keyword.word}\\b`, "i").test(message)) {
-                                // When a word from a new group is said push that group's value to the array
+
+                                // When a word from a new group is said push that group's value to the array if a keyword or keywords from the same groups are repeated rumination's value in slightly increased
                                 if (!mentionedGroups.includes(keyword.group)) {
                                     mentionedGroups.push(keyword.group);
                                     scoreChat += keyword.value;
                                 }
+                                else {
+                                    rumination += rumination < 1 ? 0.05 : 1;
+                                }
                             }
                         });
+
+                        /* -------------------------------------------------------- */
+                        /* ANSWER WITH A QUESTION DEPENDING ON THE USER'S LAST KEYWORD
+                        /* -------------------------------------------------------- */
+                        let botMessage = "";
+                        let lastMentionedGroup = mentionedGroups[mentionedGroups.length - 1];
+                        let randomIndex = ~~(Math.random() * (whyAreYouLike[lastMentionedGroup].length));
+                        let nextQuestion = "";
+                        if (message.split(" ").length >= 5) {
+                            // Remove questions that have already been asked
+                            if (questionsAsked.length > 0) {
+                                let filteredQuestionArray = whyAreYouLike[lastMentionedGroup].filter(question => !questionsAsked.includes(question));
+                                randomIndex = ~~(Math.random() * filteredQuestionArray.length);
+                                nextQuestion = filteredQuestionArray[randomIndex];
+                            }
+                            else if (mentionedGroups.length > 0) {
+                                nextQuestion = whyAreYouLike[lastMentionedGroup][randomIndex];
+                            }
+                            else {
+                                botMessage += `No he detectado nada que poder analizar por favor sigue contándome`
+                            }
+                            // Set a response message/question
+                            if (nextQuestion !== undefined) {
+                                botMessage += nextQuestion + "&";
+                                questionsAsked.push(nextQuestion);
+                            }
+                            else {
+                                botMessage += "Entiendo... Por favor cuéntame si hay algo más que te aflija aunque no se de este tema,o si no, puedes contarme como te sientes en estos momentos teniendo en cuenta lo que llevamos hablado&";
+                            }
+                        }
 
                         req.app.locals.db.collection("results")
                             .updateOne(
                                 { userId, finished: false },
                                 {
                                     $set:
-                                        { scoreChat, mentioned: mentionedGroups, fppCounter, oppCounter, wordCounter }
+                                        { scoreChat, mentioned: mentionedGroups, fppCounter, oppCounter, wordCounter, questionsAsked, rumination }
                                 },
                                 (err) => {
                                     if (err != null) {
@@ -156,22 +188,7 @@ router.post('/checkMessage', (req, res) => {
                                                 res.json(tellMeMore[Math.floor(Math.random() * tellMeMore.length)] + " Tu score del chat: " + scoreChat);
                                             }
                                             else {
-                                                let botMessage = "";
-
-                                                // Remove questions that have already been asked
-                                                let filteredQuestionArray;
-                                                if (questionsAsked.length > 0) {
-                                                    filteredQuestionArray = questionsAsked.filter(question => !whyAreYouLike[mentionedGroups[mentionedGroups.length - 1]].includes(question))
-                                                    botMessage += filteredQuestionArray.toString() + "&";
-                                                }
-                                                else if (mentionedGroups.length > 0) {
-                                                    filteredQuestionArray = whyAreYouLike[mentionedGroups[mentionedGroups.length - 1]];
-                                                    botMessage += filteredQuestionArray.toString() + "&";
-                                                }
-                                                else {
-                                                    botMessage += `Yo qué sé XD`
-                                                }
-                                                console.log(filteredQuestionArray);
+                                                // console.log(filteredQuestionArray);
                                                 // botMessage += `Score del test ${scoreTest}.&`;
                                                 // botMessage += `Score del chat ${scoreChat}&`;
                                                 // botMessage += `FPP: ${fppCounter}&`;
