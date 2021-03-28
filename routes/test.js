@@ -34,6 +34,12 @@ router.post('/newresult', (req, res) => {
 
     newResult.finished = false;
     newResult.mentioned = [];
+    newResult.fppCounter = 0;
+    newResult.oppCounter = 0;
+    newResult.wordCounter = 0;
+    newResult.rumination = 0;
+    newResult.pronoungScoring = 0;
+    newResult.questionsAsked = [];
 
     dbConnection = req.app.locals.db;
     dbConnection.collection('results').insertOne(newResult, function (err) {
