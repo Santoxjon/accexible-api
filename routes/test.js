@@ -49,7 +49,7 @@ router.post('/newresult', (req, res) => {
         } else if (newResult.scoreTest > 5) {
             res.redirect("http://localhost:3000/chatbot");
         } else {
-            res.send("no estas mal de la cabeza");
+            res.redirect("http://localhost:3000/chatbot");
         }
     })
 });
