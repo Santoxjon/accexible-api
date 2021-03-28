@@ -89,6 +89,10 @@ router.post('/checkMessage', (req, res) => {
 
     let message = req.body.message.toLowerCase();
     let userId = new ObjectId(req.body.userId);
+    let userTime = req.body.responseTime;
+    let nowTime = Date.now();
+    console.log(`Now time ${nowTime}`, `\nMessage time ${userTime}`);
+    console.log(`Response time ${parseInt((nowTime - userTime) / 1000)}`);
 
     // Get the result row
     req.app.locals.db.collection("results").findOne({ userId, finished: false }, (err, result) => {
@@ -96,7 +100,7 @@ router.post('/checkMessage', (req, res) => {
             console.log(err);
             res.send({ mensaje: "error: " + err });
         } else {
-            // let scoreTest = result.scoreTest;
+            let scoreTest = result.scoreTest;
             let scoreChat = result.scoreChat;
             let mentionedGroups = result.mentioned;
             let fppCounter = +result.fppCounter;
@@ -104,12 +108,18 @@ router.post('/checkMessage', (req, res) => {
             let wordCounter = +result.wordCounter
             let questionsAsked = result.questionsAsked;
             let rumination = +result.rumination;
+            let pronounScoring = +result.pronounScoring;
+            let responseTimeScoring = +result.responseTimeScoring;
 
-            if (wordCounter >= 200) {
+            if (wordCounter >= 150) {
                 res.json("Recivido! Dame un momento y te llevaré a los resultados de la prueba...");
             }
             else {
                 wordCounter += message.split(" ").length;
+                let timeCalc = parseInt((nowTime - userTime) / 1000);
+                if (responseTimeScoring < 1) {
+                    responseTimeScoring += (message.split(" ").length / timeCalc) < 0.35 ? 0.1 : 0;
+                }
                 FPP.forEach(fpp => {
                     let matches = message.match(new RegExp(`\\b${fpp}\\b`, "ig"));
                     fppCounter += matches ? matches.length : 0;
@@ -118,6 +128,7 @@ router.post('/checkMessage', (req, res) => {
                     let matches = message.match(new RegExp(`\\b${opp}\\b`, "ig"));
                     oppCounter += matches ? matches.length : 0;
                 });
+                pronounScoring = +(fppCounter / (fppCounter + oppCounter)).toFixed(1);
 
                 // Get all the keywords except already mentioned ones
                 req.app.locals.db.collection("keywords").find({ mentioned: { $nin: mentionedGroups } }).sort({ "group": -1 }).toArray(function (err, data) {
@@ -125,7 +136,7 @@ router.post('/checkMessage', (req, res) => {
                         console.log(err);
                         res.send({ mensaje: "error: " + err });
                     } else {
-                        
+
                         // Update score using keywords value
                         data.forEach(keyword => {
                             if (new RegExp(`\\b${keyword.word}\\b`, "i").test(message)) {
@@ -146,29 +157,39 @@ router.post('/checkMessage', (req, res) => {
                         /* -------------------------------------------------------- */
                         let botMessage = "";
                         let lastMentionedGroup = mentionedGroups[mentionedGroups.length - 1];
-                        let randomIndex = ~~(Math.random() * (whyAreYouLike[lastMentionedGroup].length));
-                        let nextQuestion = "";
-                        if (message.split(" ").length >= 5) {
-                            // Remove questions that have already been asked
-                            if (questionsAsked.length > 0) {
-                                let filteredQuestionArray = whyAreYouLike[lastMentionedGroup].filter(question => !questionsAsked.includes(question));
-                                randomIndex = ~~(Math.random() * filteredQuestionArray.length);
-                                nextQuestion = filteredQuestionArray[randomIndex];
+                        console.log(`Last mentioned group ${lastMentionedGroup}`);
+                        if (lastMentionedGroup !== undefined) {
+                            let randomIndex = ~~(Math.random() * (whyAreYouLike[lastMentionedGroup].length));
+                            let nextQuestion = "";
+                            if (message.split(" ").length >= 5) {
+                                console.log("He entrado aquí");
+                                // Remove questions that have already been asked
+                                if (questionsAsked.length > 0) {
+                                    let filteredQuestionArray = whyAreYouLike[lastMentionedGroup].filter(question => !questionsAsked.includes(question));
+                                    randomIndex = ~~(Math.random() * filteredQuestionArray.length);
+                                    nextQuestion = filteredQuestionArray[randomIndex];
+                                }
+                                else if (mentionedGroups.length > 0) {
+                                    console.log(`Last mentioned group ${lastMentionedGroup}`);
+                                    console.log(`Random index ${randomIndex}`);
+                                    nextQuestion = whyAreYouLike[lastMentionedGroup][randomIndex];
+                                }
+                                else {
+                                    botMessage += `No he detectado nada que poder analizar por favor sigue contándome`;
+                                }
+                                // Set a response message/question
+                                if (nextQuestion !== undefined) {
+                                    botMessage += nextQuestion + "&";
+                                    questionsAsked.push(nextQuestion);
+                                }
+                                else {
+                                    botMessage += "Entiendo... Por favor cuéntame si hay algo más que te aflija aunque no se de este tema,o si no, puedes contarme como te sientes en estos momentos teniendo en cuenta lo que llevamos hablado&";
+                                }
                             }
-                            else if (mentionedGroups.length > 0) {
-                                nextQuestion = whyAreYouLike[lastMentionedGroup][randomIndex];
-                            }
-                            else {
-                                botMessage += `No he detectado nada que poder analizar por favor sigue contándome`
-                            }
-                            // Set a response message/question
-                            if (nextQuestion !== undefined) {
-                                botMessage += nextQuestion + "&";
-                                questionsAsked.push(nextQuestion);
-                            }
-                            else {
-                                botMessage += "Entiendo... Por favor cuéntame si hay algo más que te aflija aunque no se de este tema,o si no, puedes contarme como te sientes en estos momentos teniendo en cuenta lo que llevamos hablado&";
-                            }
+
+                        }
+                        else {
+                            botMessage += `No he detectado nada que poder analizar por favor cuéntame cómo te hace sentir eso`;
                         }
 
                         req.app.locals.db.collection("results")
@@ -176,27 +197,25 @@ router.post('/checkMessage', (req, res) => {
                                 { userId, finished: false },
                                 {
                                     $set:
-                                        { scoreChat, mentioned: mentionedGroups, fppCounter, oppCounter, wordCounter, questionsAsked, rumination }
+                                        { scoreChat, mentioned: mentionedGroups, fppCounter, oppCounter, wordCounter, questionsAsked, rumination, pronounScoring, responseTimeScoring }
                                 },
                                 (err) => {
                                     if (err != null) {
                                         console.log(err);
                                         res.send({ mensaje: "error: " + err });
                                     } else {
-                                        if (wordCounter < 200) {
+                                        if (wordCounter < 150) {
                                             if (message.split(" ").length < 5) {
                                                 res.json(tellMeMore[Math.floor(Math.random() * tellMeMore.length)] + " Tu score del chat: " + scoreChat);
                                             }
                                             else {
-                                                // console.log(filteredQuestionArray);
-                                                // botMessage += `Score del test ${scoreTest}.&`;
-                                                // botMessage += `Score del chat ${scoreChat}&`;
-                                                // botMessage += `FPP: ${fppCounter}&`;
-                                                // botMessage += `OPP: ${oppCounter}&`;
-                                                // botMessage += `FPP%: ${fppCounter * (100 / (oppCounter + fppCounter))}&`
-                                                // botMessage += fppCounter * (100 / (oppCounter + fppCounter)) > 65 ? "Predominan pronombres de primera persona&" : "Predominan otros pronombres&";
-                                                // botMessage += `Total de palabras: ${wordCounter}&`
-                                                // botMessage += `SCORE TOTAL: ${scoreChat + scoreTest}&`;
+                                                let totalScore = +(scoreChat + scoreTest + pronounScoring + rumination).toFixed(1)
+                                                botMessage += " &";
+                                                botMessage += `Score del test ${scoreTest}&`;
+                                                botMessage += `Score del chat ${scoreChat}&`;
+                                                botMessage += `Score pronombres ${pronounScoring}&`;
+                                                botMessage += `Score rumination ${rumination}&`;
+                                                botMessage += `SCORE TOTAL: ${totalScore} / 15&`;
                                                 res.json(botMessage);
                                             }
                                         }
