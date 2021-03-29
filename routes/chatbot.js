@@ -112,7 +112,20 @@ router.post('/checkMessage', (req, res) => {
             let responseTimeScoring = +result.responseTimeScoring;
 
             if (wordCounter >= 150) {
-                res.json("Recibido! El link de debajo te llevará a tu resultados&^");
+                req.app.locals.db.collection("results")
+                    .updateOne(
+                        { userId, finished: false },
+                        {
+                            $set:
+                                { finished: true }
+                        }, (err) => {
+                            if (err === null) {
+                                res.json("Recibido! El link de debajo te llevará a tu resultados&^");
+                            }
+                            else{
+                                console.log(err);
+                            }
+                        })
             }
             else {
                 wordCounter += message.split(" ").length;
@@ -128,7 +141,7 @@ router.post('/checkMessage', (req, res) => {
                     let matches = message.match(new RegExp(`\\b${opp}\\b`, "ig"));
                     oppCounter += matches ? matches.length : 0;
                 });
-                
+
                 if ((fppCounter + oppCounter) > 5) {
                     pronounScoring = +(fppCounter / (fppCounter + oppCounter)).toFixed(1);
                 }
