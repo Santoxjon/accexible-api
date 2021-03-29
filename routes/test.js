@@ -40,6 +40,7 @@ router.post('/newresult', (req, res) => {
     newResult.rumination = 0;
     newResult.pronounScoring = 0;
     newResult.questionsAsked = [];
+    newResult.responseTimeScoring = 0;
 
     dbConnection = req.app.locals.db;
     dbConnection.collection('results').insertOne(newResult, function (err) {
