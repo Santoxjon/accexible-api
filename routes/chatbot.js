@@ -225,7 +225,7 @@ router.post('/checkMessage', (req, res) => {
                                     } else {
                                         if (wordCounter < 150) {
                                             if (message.split(" ").length < 5) {
-                                                res.json(tellMeMore[Math.floor(Math.random() * tellMeMore.length)] + " Tu score del chat: " + scoreChat);
+                                                res.json(tellMeMore[Math.floor(Math.random() * tellMeMore.length)]);
                                             }
                                             else {
                                                 // let totalScore = +(scoreChat + scoreTest + pronounScoring + rumination).toFixed(1)
