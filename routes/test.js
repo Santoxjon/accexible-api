@@ -38,7 +38,7 @@ router.post('/newresult', (req, res) => {
     newResult.oppCounter = 0;
     newResult.wordCounter = 0;
     newResult.rumination = 0;
-    newResult.pronoungScoring = 0;
+    newResult.pronounScoring = 0;
     newResult.questionsAsked = [];
 
     dbConnection = req.app.locals.db;
