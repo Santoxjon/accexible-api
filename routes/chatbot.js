@@ -100,7 +100,7 @@ router.post('/checkMessage', (req, res) => {
             console.log(err);
             res.send({ mensaje: "error: " + err });
         } else {
-            let scoreTest = result.scoreTest;
+            // let scoreTest = result.scoreTest;
             let scoreChat = result.scoreChat;
             let mentionedGroups = result.mentioned;
             let fppCounter = +result.fppCounter;
@@ -112,7 +112,7 @@ router.post('/checkMessage', (req, res) => {
             let responseTimeScoring = +result.responseTimeScoring;
 
             if (wordCounter >= 150) {
-                res.json("Recivido! Dame un momento y te llevaré a los resultados de la prueba...");
+                res.json("Recibido! El link de debajo te llevará a tu resultados&^");
             }
             else {
                 wordCounter += message.split(" ").length;
@@ -128,7 +128,13 @@ router.post('/checkMessage', (req, res) => {
                     let matches = message.match(new RegExp(`\\b${opp}\\b`, "ig"));
                     oppCounter += matches ? matches.length : 0;
                 });
-                pronounScoring = +(fppCounter / (fppCounter + oppCounter)).toFixed(1);
+                
+                if ((fppCounter + oppCounter) > 5) {
+                    pronounScoring = +(fppCounter / (fppCounter + oppCounter)).toFixed(1);
+                }
+                else {
+                    pronounScoring = 0;
+                }
 
                 // Get all the keywords except already mentioned ones
                 req.app.locals.db.collection("keywords").find({ mentioned: { $nin: mentionedGroups } }).sort({ "group": -1 }).toArray(function (err, data) {
@@ -209,13 +215,13 @@ router.post('/checkMessage', (req, res) => {
                                                 res.json(tellMeMore[Math.floor(Math.random() * tellMeMore.length)] + " Tu score del chat: " + scoreChat);
                                             }
                                             else {
-                                                let totalScore = +(scoreChat + scoreTest + pronounScoring + rumination).toFixed(1)
-                                                botMessage += " &";
-                                                botMessage += `Score del test ${scoreTest}&`;
-                                                botMessage += `Score del chat ${scoreChat}&`;
-                                                botMessage += `Score pronombres ${pronounScoring}&`;
-                                                botMessage += `Score rumination ${rumination}&`;
-                                                botMessage += `SCORE TOTAL: ${totalScore} / 15&`;
+                                                // let totalScore = +(scoreChat + scoreTest + pronounScoring + rumination).toFixed(1)
+                                                // botMessage += " &";
+                                                // botMessage += `Score del test ${scoreTest}&`;
+                                                // botMessage += `Score del chat ${scoreChat}&`;
+                                                // botMessage += `Score pronombres ${pronounScoring}&`;
+                                                // botMessage += `Score rumination ${rumination}&`;
+                                                // botMessage += `SCORE TOTAL: ${totalScore} / 15&`;
                                                 res.json(botMessage);
                                             }
                                         }
