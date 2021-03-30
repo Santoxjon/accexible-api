@@ -1,6 +1,7 @@
 var express = require('express');
 var router = express.Router();
 const { ObjectId } = require('mongodb');
+const CLIENT = `${process.env.CLIENT_PROTOCOL}://${process.env.CLIENT_URL}:${process.env.CLIENT_PORT}`;
 
 const mcTestScore = {
     "a": 0.25,
@@ -47,10 +48,9 @@ router.post('/newresult', (req, res) => {
         if (err != null) {
             console.log(err);
             res.send("Ha habido un error: " + error);
-        } else if (newResult.scoreTest > 5) {
-            res.redirect("http://localhost:3000/chatbot");
-        } else {
-            res.redirect("http://localhost:3000/chatbot");
+        }
+        else {
+            res.redirect(`${CLIENT}/chatbot`);
         }
     })
 });

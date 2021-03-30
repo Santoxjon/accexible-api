@@ -1,5 +1,6 @@
 var express = require('express');
 var router = express.Router();
+const CLIENT = `${process.env.CLIENT_PROTOCOL}://${process.env.CLIENT_URL}:${process.env.CLIENT_PORT}`;
 
 var bcrypt = require('bcrypt');
 const { ObjectId } = require('mongodb');
@@ -50,14 +51,14 @@ router.post('/register', (req, res) => {
     } else {
       //console.log(datos); 
       if (datos.length > 0) {
-        res.redirect("http://localhost:3000/register")
+        res.redirect(`${CLIENT}/register`);
       } else {
         dbConnection.collection('users').insertOne(newUser, function (err) {
           if (err != null) {
             console.log(err);
             res.send("Ha habido un error: " + error);
           } else {
-            res.redirect("http://localhost:3000/login")
+            res.redirect(`${CLIENT}/login`);
           }
 
         })
@@ -138,7 +139,7 @@ router.put('/changePassword', (req, res) => {
   let passwordNuevo = req.body.password;
   let passwordCifrado = bcrypt.hashSync(passwordNuevo, 10)
   dbConnection = req.app.locals.db;
-  dbConnection.collection('users').updateOne({ _id }, { $set: {password: passwordCifrado} }, function (err, user) {
+  dbConnection.collection('users').updateOne({ _id }, { $set: { password: passwordCifrado } }, function (err, user) {
     if (err !== null) {
       res.send("Ha habido un error " + err);
     } else {
